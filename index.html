@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>希望休申請フォーム</title>
+  <title>PickMyOff</title>
   <style>
     body {
       font-family: sans-serif;
@@ -33,7 +33,7 @@
   </style>
 </head>
 <body>
-  <h2>希望休申請</h2>
+  <h2>希望休申請 - PickMyOff</h2>
   <label>社員番号：</label>
   <input type="text" id="employeeId" placeholder="例: 1234"><br>
 
@@ -42,7 +42,6 @@
   <button onclick="goToConfirm()">確認</button>
 
   <script>
-    // カレンダーの日付（仮で1〜30まで表示）
     const calendar = document.getElementById("calendar")
     const selectedDays = new Set()
 
@@ -62,7 +61,6 @@
       calendar.appendChild(day)
     }
 
-    // 確認ボタンでアラートに内容表示（仮）
     function goToConfirm() {
       const id = document.getElementById("employeeId").value
       if (!id) {
@@ -73,7 +71,12 @@
         alert("希望日を1つ以上選んでください")
         return
       }
-      alert(`社員番号: ${id}\n希望日: ${[...selectedDays].sort((a,b)=>a-b).join(", ")}`)
+
+      // データをURLにのせて遷移
+      const params = new URLSearchParams()
+      params.set("id", id)
+      params.set("days", [...selectedDays].join(","))
+      location.href = `confirm.html?${params.toString()}`
     }
   </script>
 </body>
