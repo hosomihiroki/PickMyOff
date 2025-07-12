@@ -27,7 +27,7 @@
     document.getElementById("summary").textContent = `社員番号: ${id}\n希望日: ${days.join(", ")}`
 
     function submitRequest() {
-      fetch("https://script.google.com/macros/s/AKfycbx1kZWE3VpkmCib-0aM1JjqseFSsU7XMUjubmoT4Q0398XklA8mPX-552nM_JmI2gEHEA/exec", {
+      fetch("https://script.google.com/macros/s/AKfycbw2z-m6RKBpIKiNXQnAHgcalhIAd4x4OqfhIbh9BD6lZlcWTSwnm1LEBrzAyd2YVnmCag/exec", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
