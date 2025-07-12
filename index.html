@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>希望休申請フォーム</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 20px;
+    }
+    input, button {
+      margin: 10px 0;
+      font-size: 16px;
+    }
+    .calendar {
+      display: flex;
+      flex-wrap: wrap;
+      width: 210px;
+    }
+    .day {
+      width: 30px;
+      height: 30px;
+      margin: 2px;
+      text-align: center;
+      line-height: 30px;
+      border: 1px solid #ccc;
+      cursor: pointer;
+    }
+    .selected {
+      background-color: #4caf50;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <h2>希望休申請</h2>
+  <label>社員番号：</label>
+  <input type="text" id="employeeId" placeholder="例: 1234"><br>
+
+  <div class="calendar" id="calendar"></div>
+
+  <button onclick="goToConfirm()">確認</button>
+
+  <script>
+    // カレンダーの日付（仮で1〜30まで表示）
+    const calendar = document.getElementById("calendar")
+    const selectedDays = new Set()
+
+    for (let i = 1; i <= 30; i++) {
+      const day = document.createElement("div")
+      day.className = "day"
+      day.textContent = i
+      day.onclick = () => {
+        if (selectedDays.has(i)) {
+          selectedDays.delete(i)
+          day.classList.remove("selected")
+        } else {
+          selectedDays.add(i)
+          day.classList.add("selected")
+        }
+      }
+      calendar.appendChild(day)
+    }
+
+    // 確認ボタンでアラートに内容表示（仮）
+    function goToConfirm() {
+      const id = document.getElementById("employeeId").value
+      if (!id) {
+        alert("社員番号を入力してください")
+        return
+      }
+      if (selectedDays.size === 0) {
+        alert("希望日を1つ以上選んでください")
+        return
+      }
+      alert(`社員番号: ${id}\n希望日: ${[...selectedDays].sort((a,b)=>a-b).join(", ")}`)
+    }
+  </script>
+</body>
+</html>
