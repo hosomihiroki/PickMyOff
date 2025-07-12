@@ -22,37 +22,27 @@
   <script>
     const params = new URLSearchParams(location.search)
     const id = params.get("id")
-    const days = params.get("days")
+    const days = params.get("days").split(",")
 
-    document.getElementById("summary").textContent = `社員番号: ${id}\n希望日: ${days}`
+    document.getElementById("summary").textContent = `社員番号: ${id}\n希望日: ${days.join(", ")}`
 
     function submitRequest() {
-      alert("送信しました（ここからGAS連携予定）")
-  const params = new URLSearchParams(location.search)
-  const id = params.get("id")
-  const days = params.get("days").split(",")
-
-  document.getElementById("summary").textContent = `社員番号: ${id}\n希望日: ${days.join(", ")}`
-
-  function submitRequest() {
-    fetch("https://script.google.com/macros/s/AKfycbxy-sjrSLTvcvJtr4rPmdqb6E1mUUjbDOsyNR2cy9WnL2PtDGBOs-pAAG11x3SxLzEiIQ/exec", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        employeeId: id,
-        days: days
+      fetch("https://script.google.com/macros/s/AKfycbxy-sjrSLTvcvJtr4rPmdqb6E1mUUjbDOsyNR2cy9WnL2PtDGBOs-pAAG11x3SxLzEiIQ/exec", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          employeeId: id,
+          days: days
+        })
       })
-    })
-    .then(res => res.text())
-    .then(msg => {
-      alert("送信完了: " + msg)
-      location.href = "index.html"
-    })
-    .catch(err => {
-      alert("送信失敗: " + err)
-    })
-  }
-</script>
+      .then(res => res.text())
+      .then(msg => {
+        alert("送信完了: " + msg)
+        location.href = "index.html"
+      })
+      .catch(err => {
+        alert("送信失敗: " + err)
+      })
     }
   </script>
 </body>
