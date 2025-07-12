@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>PickMyOff - 確認</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 20px;
+    }
+    button {
+      font-size: 16px;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h2>申請内容の確認</h2>
+  <p id="summary"></p>
+  <button onclick="submitRequest()">提出</button>
+
+  <script>
+    const params = new URLSearchParams(location.search)
+    const id = params.get("id")
+    const days = params.get("days")
+
+    document.getElementById("summary").textContent = `社員番号: ${id}\n希望日: ${days}`
+
+    function submitRequest() {
+      alert("送信しました（ここからGAS連携予定）")
+      // ここにGAS連携fetch処理を書く予定
+    }
+  </script>
+</body>
+</html>
