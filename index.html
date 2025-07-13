@@ -231,6 +231,9 @@
 
       const query = new URLSearchParams()
       query.append("id", empIdInput.value.trim())
+      query.append("name", empNameEl.textContent.trim())
+      query.append("year", currentDate.getFullYear())
+      query.append("month", currentDate.getMonth() + 1)
       selectedDays.forEach(day => query.append("days", day))
 
       location.href = `confirm.html?${query.toString()}`
