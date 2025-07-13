@@ -3,155 +3,137 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>申請確認</title>
+  <title>希望休確認</title>
   <style>
     body {
+      background-color: #f5f5f5;
       font-family: sans-serif;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-      background: #f5f5f5;
       margin: 0;
+      padding: 20px;
     }
     .container {
-      background: white;
-      border-radius: 20px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-      padding: 30px;
-      width: 320px;
-      text-align: center;
+      max-width: 360px;
+      background-color: white;
+      margin: 0 auto;
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
     }
     h2 {
-      margin-bottom: 10px;
+      font-size: 20px;
+      font-weight: bold;
+      text-align: center;
+      margin-bottom: 16px;
     }
-    .username {
+    .id {
+      text-align: center;
+      margin-bottom: 12px;
       font-size: 14px;
-      margin-bottom: 20px;
-      color: #666;
     }
     .calendar {
       display: grid;
       grid-template-columns: repeat(7, 1fr);
-      gap: 5px;
+      gap: 6px;
+      margin-top: 12px;
       margin-bottom: 20px;
     }
-    .day {
-      padding: 10px 0;
-      border-radius: 8px;
-      background: #eee;
-      color: #333;
+    .calendar div {
+      aspect-ratio: 1 / 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 6px;
+      font-size: 14px;
+      background-color: #eee;
     }
-    .day.sun {
+    .calendar .selected {
+      background-color: #1976d2;
+      color: white;
+    }
+    .calendar .sun {
       color: red;
     }
-    .day.sat {
+    .calendar .sat {
       color: blue;
     }
-    .day.selected {
-      background: #4285f4;
-      color: white;
-      font-weight: bold;
-    }
-    .buttons {
-      display: flex;
-      gap: 10px;
-      flex-direction: column;
-    }
-    button {
-      border: none;
-      padding: 10px;
-      border-radius: 8px;
-      font-weight: bold;
-      cursor: pointer;
+    .button {
+      width: 100%;
       font-size: 16px;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      margin-bottom: 10px;
     }
     .submit-btn {
-      background: #34a853;
+      background-color: #4caf50;
       color: white;
     }
     .back-btn {
-      background: #ccc;
-    }
-    .loading {
-      animation: blink 1s infinite;
-    }
-    @keyframes blink {
-      0% { opacity: 1; }
-      50% { opacity: 0.5; }
-      100% { opacity: 1; }
+      background-color: #ccc;
+      color: black;
     }
   </style>
 </head>
 <body>
   <div class="container">
     <h2>申請確認</h2>
-    <div class="username" id="username">社員番号: -</div>
+    <div class="id" id="staffInfo">社員番号: -</div>
     <div class="calendar" id="calendar"></div>
-    <div class="buttons">
-      <button class="submit-btn" id="submitBtn">提出</button>
-      <button class="back-btn" onclick="history.back()">戻る</button>
-    </div>
+    <button class="button submit-btn" id="submit">提出</button>
+    <button class="button back-btn" onclick="history.back()">戻る</button>
   </div>
+
   <script>
-    const url = new URL(location.href);
-    const id = url.searchParams.get('id');
-    const days = url.searchParams.get('days')?.split(',') || [];
+    const urlParams = new URLSearchParams(window.location.search);
+    const staffId = urlParams.get("id") || "";
+    const days = (urlParams.get("days") || "").split(",").map(d => parseInt(d)).filter(d => !isNaN(d));
+    const year = new Date().getFullYear();
+    const month = new Date().getMonth();
 
-    document.getElementById('username').textContent = `社員番号: ${id}`;
+    document.getElementById("staffInfo").textContent = `社員番号: ${staffId}`;
 
-    const calendarEl = document.getElementById('calendar');
-    const today = new Date();
-    const year = today.getFullYear();
-    const month = today.getMonth();
-
-    const firstDay = new Date(year, month, 1).getDay();
+    const calendar = document.getElementById("calendar");
+    const date = new Date(year, month, 1);
+    const firstDay = date.getDay();
     const lastDate = new Date(year, month + 1, 0).getDate();
 
-    const daysOfWeek = ['日', '月', '火', '水', '木', '金', '土'];
+    // 曜日ヘッダー
+    const daysOfWeek = ["日", "月", "火", "水", "木", "金", "土"];
     daysOfWeek.forEach((d, i) => {
-      const el = document.createElement('div');
-      el.className = 'day ' + (i === 0 ? 'sun' : i === 6 ? 'sat' : '');
-      el.textContent = d;
-      calendarEl.appendChild(el);
+      const cell = document.createElement("div");
+      cell.textContent = d;
+      if (i === 0) cell.classList.add("sun");
+      if (i === 6) cell.classList.add("sat");
+      calendar.appendChild(cell);
     });
 
+    // 空白セル
     for (let i = 0; i < firstDay; i++) {
-      const empty = document.createElement('div');
-      calendarEl.appendChild(empty);
+      calendar.appendChild(document.createElement("div"));
     }
 
-    for (let d = 1; d <= lastDate; d++) {
-      const date = new Date(year, month, d);
-      const day = date.getDay();
-      const el = document.createElement('div');
-      el.className = 'day ' + (day === 0 ? 'sun' : day === 6 ? 'sat' : '');
-      if (days.includes(d.toString())) el.classList.add('selected');
-      el.textContent = d;
-      calendarEl.appendChild(el);
+    for (let i = 1; i <= lastDate; i++) {
+      const cell = document.createElement("div");
+      cell.textContent = i;
+      const thisDay = new Date(year, month, i).getDay();
+      if (thisDay === 0) cell.classList.add("sun");
+      if (thisDay === 6) cell.classList.add("sat");
+      if (days.includes(i)) cell.classList.add("selected");
+      calendar.appendChild(cell);
     }
 
-    const btn = document.getElementById('submitBtn');
-    btn.addEventListener('click', async () => {
-      if (btn.disabled) return;
-      btn.disabled = true;
-      btn.textContent = '送信中...';
-      btn.classList.add('loading');
-
+    document.getElementById("submit").addEventListener("click", async () => {
+      const body = JSON.stringify({ id: staffId, days });
       try {
-        const res = await fetch('https://script.google.com/macros/s/AKfycbwlcXydzefTMfVv-0DUTCFoSQcGcI2-sVendy6iwfUz11cwhDcspJHfBxPmxCFIl3nPrg/exec', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id, days })
+        const res = await fetch("https://pickmyoff-proxy.hosomi-biz.workers.dev/submit", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body,
         });
-        const result = await res.text();
-        alert(result);
+        const text = await res.text();
+        alert("送信成功: " + text);
       } catch (e) {
-        alert('送信失敗：' + e.message);
-      } finally {
-        btn.disabled = false;
-        btn.textContent = '提出';
-        btn.classList.remove('loading');
+        alert("送信失敗: " + e.message);
       }
     });
   </script>
