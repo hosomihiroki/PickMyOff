@@ -1,169 +1,156 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>希望休申請 - PickMyOff</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body {
       margin: 0;
-      font-family: sans-serif;
       background: #f4f4f4;
+      font-family: sans-serif;
       display: flex;
       justify-content: center;
       align-items: center;
       min-height: 100vh;
     }
-
     .container {
-      background: white;
+      background: #fff;
       padding: 24px;
       border-radius: 12px;
-      box-shadow: 0 0 12px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
       width: 90%;
       max-width: 360px;
       text-align: center;
     }
-
     h1 {
       font-size: 20px;
-      margin-bottom: 20px;
-    }
-
-    .input {
-      width: 100%;
-      padding: 12px;
-      font-size: 16px;
       margin-bottom: 16px;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-      box-sizing: border-box;
     }
-
+    input {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 16px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
     .calendar {
       display: grid;
       grid-template-columns: repeat(7, 1fr);
-      gap: 4px;
+      gap: 6px;
+      margin-top: 10px;
       margin-bottom: 16px;
     }
-
-    .calendar button {
-      padding: 12px 0;
-      border: none;
-      background: #eee;
+    .calendar div {
+      padding: 10px;
       border-radius: 6px;
+      background: #eee;
       font-size: 14px;
+      cursor: pointer;
     }
-
-    .calendar button.selected {
+    .calendar .header {
+      background: transparent;
+      font-weight: bold;
+      cursor: default;
+    }
+    .calendar .selected {
       background: #007bff;
-      color: white;
+      color: #fff;
     }
-
-    .calendar .sun {
+    .calendar .sunday {
       color: red;
     }
-
-    .calendar .sat {
+    .calendar .saturday {
       color: blue;
     }
-
-    .weekday {
-      font-weight: bold;
-    }
-
-    .submit-btn {
+    button {
       width: 100%;
       padding: 12px;
+      font-size: 16px;
       background: #007bff;
-      color: white;
+      color: #fff;
       border: none;
       border-radius: 6px;
-      font-size: 16px;
-    }
-
-    .month-label {
-      margin-bottom: 8px;
-      font-size: 16px;
+      cursor: pointer;
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>希望休申請</h1>
-    <input id="employeeId" class="input" type="text" placeholder="社員番号を入力" />
-    <div class="month-label" id="monthLabel"></div>
-    <div class="calendar" id="calendar"></div>
-    <button class="submit-btn" onclick="goToConfirm()">確認</button>
-  </div>
+<div class="container">
+  <h1>希望休申請</h1>
+  <input type="text" id="id" placeholder="社員番号">
+  <div id="calendar-header"></div>
+  <div class="calendar" id="calendar"></div>
+  <button onclick="goConfirm()">確認</button>
+</div>
 
-  <script>
-    const calendarEl = document.getElementById("calendar")
-    const monthLabel = document.getElementById("monthLabel")
-    const now = new Date()
-    const year = now.getFullYear()
-    const month = now.getMonth() // 0-indexed
-    const selectedDays = new Set()
+<script>
+  const today = new Date()
+  const year = today.getFullYear()
+  const month = today.getMonth()
 
-    const firstDay = new Date(year, month, 1)
-    const lastDay = new Date(year, month + 1, 0)
-    const firstWeekday = firstDay.getDay()
+  const calendarEl = document.getElementById("calendar")
+  const headerEl = document.getElementById("calendar-header")
+  const selectedDates = new Set()
 
-    monthLabel.textContent = `${year}年${month + 1}月`
+  const weekdays = ["日", "月", "火", "水", "木", "金", "土"]
 
-    // 曜日ラベル
-    const weekdays = ["日", "月", "火", "水", "木", "金", "土"]
-    weekdays.forEach((day, i) => {
-      const w = document.createElement("div")
-      w.className = "weekday"
-      if (i === 0) w.classList.add("sun")
-      if (i === 6) w.classList.add("sat")
-      w.textContent = day
-      calendarEl.appendChild(w)
-    })
+  headerEl.innerHTML = `<strong>${year}年${month+1}月</strong>`
 
-    // 空白
-    for (let i = 0; i < firstWeekday; i++) {
-      const empty = document.createElement("div")
-      calendarEl.appendChild(empty)
+  function buildCalendar() {
+    calendarEl.innerHTML = ""
+
+    // 曜日ヘッダー
+    for (let i = 0; i < 7; i++) {
+      const cell = document.createElement("div")
+      cell.textContent = weekdays[i]
+      cell.classList.add("header")
+      if (i === 0) cell.classList.add("sunday")
+      if (i === 6) cell.classList.add("saturday")
+      calendarEl.appendChild(cell)
     }
 
-    // 日付ボタン
-    for (let d = 1; d <= lastDay.getDate(); d++) {
-      const date = new Date(year, month, d)
-      const btn = document.createElement("button")
-      btn.textContent = d
-      const weekday = date.getDay()
-      if (weekday === 0) btn.classList.add("sun")
-      if (weekday === 6) btn.classList.add("sat")
+    const firstDay = new Date(year, month, 1).getDay()
+    const daysInMonth = new Date(year, month + 1, 0).getDate()
 
-      btn.addEventListener("click", () => {
-        const dayStr = d.toString()
-        if (selectedDays.has(dayStr)) {
-          selectedDays.delete(dayStr)
-          btn.classList.remove("selected")
+    for (let i = 0; i < firstDay; i++) {
+      calendarEl.appendChild(document.createElement("div"))
+    }
+
+    for (let day = 1; day <= daysInMonth; day++) {
+      const cell = document.createElement("div")
+      cell.textContent = day
+      const date = `${year}-${month+1}-${day}`
+      const weekDay = new Date(year, month, day).getDay()
+      if (weekDay === 0) cell.classList.add("sunday")
+      if (weekDay === 6) cell.classList.add("saturday")
+
+      cell.onclick = () => {
+        if (selectedDates.has(day)) {
+          selectedDates.delete(day)
+          cell.classList.remove("selected")
         } else {
-          selectedDays.add(dayStr)
-          btn.classList.add("selected")
+          selectedDates.add(day)
+          cell.classList.add("selected")
         }
-      })
-
-      calendarEl.appendChild(btn)
-    }
-
-    function goToConfirm() {
-      const id = document.getElementById("employeeId").value.trim()
-      if (!id) {
-        alert("社員番号を入力してください")
-        return
       }
-      const days = Array.from(selectedDays).join(",")
-      if (!days) {
-        alert("希望日を選択してください")
-        return
-      }
-      location.href = `confirm.html?id=${encodeURIComponent(id)}&days=${encodeURIComponent(days)}`
+
+      calendarEl.appendChild(cell)
     }
-  </script>
+  }
+
+  function goConfirm() {
+    const id = document.getElementById("id").value.trim()
+    if (!id || selectedDates.size === 0) {
+      alert("社員番号と希望日を選んでください")
+      return
+    }
+    const days = Array.from(selectedDates).sort((a,b)=>a-b).join(",")
+    location.href = `confirm.html?id=${encodeURIComponent(id)}&days=${encodeURIComponent(days)}`
+  }
+
+  buildCalendar()
+</script>
 </body>
 </html>
