@@ -27,12 +27,12 @@
     document.getElementById("summary").textContent = `社員番号: ${id}\n希望日: ${days.join(", ")}`
 
     function submitRequest() {
-      fetch("https://script.google.com/macros/s/AKfycbw2z-m6RKBpIKiNXQnAHgcalhIAd4x4OqfhIbh9BD6lZlcWTSwnm1LEBrzAyd2YVnmCag/exec", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          employeeId: id,
-          days: days
+      fetch("https://pickmyoff-proxy.hosomi-biz.workers.dev/", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    employeeId: id,
+    days: days
         })
       })
       .then(res => res.text())
