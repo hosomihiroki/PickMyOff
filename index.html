@@ -6,145 +6,237 @@
   <title>希望休申請</title>
   <style>
     body {
+      margin: 0;
+      padding: 0;
+      background-color: #f2f2f2;
       font-family: sans-serif;
-      background: #f4f4f4;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
     }
     .card {
-      background: #fff;
-      padding: 24px;
-      border-radius: 12px;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-      text-align: center;
-      width: 320px;
+      max-width: 350px;
+      margin: 40px auto;
+      background-color: #fff;
+      border-radius: 20px;
+      padding: 20px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     }
-    input {
-      padding: 10px;
+    .title {
+      text-align: center;
+      font-weight: bold;
+      font-size: 20px;
+      margin-bottom: 10px;
+    }
+    input[type="text"] {
       width: 100%;
-      margin-bottom: 12px;
+      padding: 10px;
+      font-size: 16px;
       border: 1px solid #ccc;
-      border-radius: 6px;
+      border-radius: 8px;
+      margin-bottom: 10px;
+    }
+    .name-display {
+      text-align: center;
+      font-size: 16px;
+      font-weight: bold;
+      margin-bottom: 15px;
     }
     .calendar {
-      display: grid;
-      grid-template-columns: repeat(7, 1fr);
-      gap: 4px;
+      text-align: center;
     }
-    .day {
-      padding: 8px;
-      background: #eee;
-      border-radius: 4px;
+    .calendar table {
+      width: 100%;
+      border-spacing: 5px;
+    }
+    .calendar th, .calendar td {
+      width: 14%;
+      height: 40px;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: bold;
+    }
+    .calendar th {
+      background-color: #eee;
+    }
+    .calendar td.selectable {
+      background-color: #eee;
       cursor: pointer;
     }
-    .day.selected {
-      background: #007bff;
-      color: white;
+    .calendar td.selected {
+      background-color: #007bff;
+      color: #fff;
     }
-    .sunday { color: red; }
-    .saturday { color: blue; }
-    button {
-      padding: 12px;
-      width: 100%;
-      margin-top: 12px;
+    .calendar td.sunday {
+      color: red;
+    }
+    .calendar td.saturday {
+      color: blue;
+    }
+    .calendar td.disabled {
+      background-color: #ccc;
+      color: #999;
+    }
+    .month-nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 10px 0;
+    }
+    .month-nav button {
+      background-color: transparent;
       border: none;
-      border-radius: 6px;
-      color: white;
-      background: #007bff;
+      font-size: 18px;
+      cursor: pointer;
+    }
+    .button {
+      width: 100%;
+      padding: 12px;
+      font-size: 16px;
       font-weight: bold;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    .button:disabled {
+      background-color: #aaa;
+      cursor: not-allowed;
+    }
+    .loader {
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #007bff;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      animation: spin 1s linear infinite;
+      display: inline-block;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
     }
   </style>
 </head>
 <body>
   <div class="card">
-    <h2>希望休申請</h2>
-    <input type="text" id="empId" placeholder="社員番号を入力" onblur="fetchName()" />
-    <div id="empName"></div>
-    <div id="month"></div>
-    <div class="calendar" id="calendar"></div>
-    <button id="submitBtn">確認</button>
+    <div class="title">希望休申請</div>
+    <input type="text" id="empId" placeholder="社員番号" />
+    <div class="name-display" id="empName">&nbsp;</div>
+    <div class="calendar">
+      <div class="month-nav">
+        <button id="prevMonth">◀</button>
+        <div id="monthYear"></div>
+        <button id="nextMonth">▶</button>
+      </div>
+      <table id="calendar"></table>
+    </div>
+    <button class="button" id="submitBtn">確認</button>
+    <div id="loading" style="display:none;text-align:center;margin-top:10px;">
+      <span class="loader"></span>
+    </div>
   </div>
-
   <script>
-    const today = new Date();
-    const year = today.getFullYear();
-    const month = today.getMonth();
-    const selectedDays = new Set();
+    const empIdInput = document.getElementById("empId")
+    const empNameEl = document.getElementById("empName")
+    const calendarEl = document.getElementById("calendar")
+    const monthYearEl = document.getElementById("monthYear")
+    const submitBtn = document.getElementById("submitBtn")
+    const loadingEl = document.getElementById("loading")
+    const prevMonthBtn = document.getElementById("prevMonth")
+    const nextMonthBtn = document.getElementById("nextMonth")
 
-    document.getElementById("month").textContent = `${year}年${month + 1}月`;
+    let selectedDays = []
+    let currentDate = new Date()
+
+    empIdInput.addEventListener("input", updateEmpName)
+    submitBtn.addEventListener("click", submitData)
+    prevMonthBtn.addEventListener("click", () => {
+      currentDate.setMonth(currentDate.getMonth() - 1)
+      renderCalendar()
+    })
+    nextMonthBtn.addEventListener("click", () => {
+      currentDate.setMonth(currentDate.getMonth() + 1)
+      renderCalendar()
+    })
+
+    function updateEmpName() {
+      const id = empIdInput.value.trim()
+      if (!id) return empNameEl.textContent = ""
+
+      fetch(`https://pickmyoff-proxy.hosomi-biz.workers.dev/get-name?id=${id}`)
+        .then(res => res.ok ? res.text() : Promise.reject("取得失敗"))
+        .then(name => empNameEl.textContent = name)
+        .catch(() => empNameEl.textContent = "名前取得失敗")
+    }
 
     function renderCalendar() {
-      const calendar = document.getElementById("calendar");
-      calendar.innerHTML = "";
+      const year = currentDate.getFullYear()
+      const month = currentDate.getMonth()
+      const firstDay = new Date(year, month, 1)
+      const lastDay = new Date(year, month + 1, 0)
+      const startDay = firstDay.getDay()
+      const totalDays = lastDay.getDate()
 
-      const startDay = new Date(year, month, 1).getDay();
-      const totalDays = new Date(year, month + 1, 0).getDate();
+      monthYearEl.textContent = `${year}年${month + 1}月`
+      calendarEl.innerHTML = ""
 
-      ["日", "月", "火", "水", "木", "金", "土"].forEach((day, i) => {
-        const div = document.createElement("div");
-        div.textContent = day;
-        if (i === 0) div.classList.add("sunday");
-        if (i === 6) div.classList.add("saturday");
-        calendar.appendChild(div);
-      });
+      const daysRow = document.createElement("tr")
+      const weekdays = ["日", "月", "火", "水", "木", "金", "土"]
+      weekdays.forEach(day => {
+        const th = document.createElement("th")
+        th.textContent = day
+        daysRow.appendChild(th)
+      })
+      calendarEl.appendChild(daysRow)
 
-      for (let i = 0; i < startDay; i++) {
-        calendar.appendChild(document.createElement("div"));
-      }
-
-      for (let i = 1; i <= totalDays; i++) {
-        const div = document.createElement("div");
-        div.textContent = i;
-        div.className = "day";
-
-        const dayOfWeek = new Date(year, month, i).getDay();
-        if (dayOfWeek === 0) div.classList.add("sunday");
-        if (dayOfWeek === 6) div.classList.add("saturday");
-
-        div.onclick = () => {
-          if (selectedDays.has(i)) {
-            selectedDays.delete(i);
-            div.classList.remove("selected");
+      let date = 1
+      for (let row = 0; row < 6; row++) {
+        const tr = document.createElement("tr")
+        for (let col = 0; col < 7; col++) {
+          const td = document.createElement("td")
+          if (row === 0 && col < startDay || date > totalDays) {
+            td.classList.add("disabled")
           } else {
-            selectedDays.add(i);
-            div.classList.add("selected");
+            td.textContent = date
+            td.classList.add("selectable")
+            if (col === 0) td.classList.add("sunday")
+            if (col === 6) td.classList.add("saturday")
+
+            const dateStr = `${month + 1}/${date}`
+            if (selectedDays.includes(dateStr)) td.classList.add("selected")
+
+            td.addEventListener("click", () => {
+              if (selectedDays.includes(dateStr)) {
+                selectedDays = selectedDays.filter(d => d !== dateStr)
+                td.classList.remove("selected")
+              } else {
+                selectedDays.push(dateStr)
+                td.classList.add("selected")
+              }
+            })
+            date++
           }
-        };
-        calendar.appendChild(div);
+          tr.appendChild(td)
+        }
+        calendarEl.appendChild(tr)
+        if (date > totalDays) break
       }
     }
 
-    async function fetchName() {
-      const empId = document.getElementById("empId").value.trim();
-      if (!empId) return;
+    function submitData() {
+      if (selectedDays.length === 0 || !empIdInput.value) return alert("社員番号と希望日を入力してください")
 
-      const url = `https://pickmyoff-proxy.hosomi-biz.workers.dev/get-name?id=${empId}`;
-      try {
-        const res = await fetch(url);
-        const name = await res.text();
-        document.getElementById("empName").textContent = name || "該当なし";
-      } catch (e) {
-        document.getElementById("empName").textContent = "取得失敗";
-      }
+      submitBtn.disabled = true
+      loadingEl.style.display = "block"
+
+      const query = new URLSearchParams()
+      query.append("id", empIdInput.value.trim())
+      selectedDays.forEach(day => query.append("days", day))
+
+      location.href = `confirm.html?${query.toString()}`
     }
 
-    function submitForm() {
-      const empId = document.getElementById("empId").value.trim();
-      const days = Array.from(selectedDays).sort((a, b) => a - b);
-      if (!empId || days.length === 0) {
-        alert("社員番号と希望日を入力してください");
-        return;
-      }
-      const params = new URLSearchParams({ id: empId, days: days.join(",") });
-      window.location.href = `confirm.html?${params.toString()}`;
-    }
-
-    document.addEventListener("DOMContentLoaded", () => {
-      document.getElementById("submitBtn").addEventListener("click", submitForm);
-      renderCalendar();
-    });
+    renderCalendar()
   </script>
 </body>
 </html>
