@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8" />
-  <title>希望休申請 - PickMyOff</title>
+  <title>申請内容の確認 - PickMyOff</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     body {
@@ -27,142 +27,61 @@
 
     h1 {
       font-size: 20px;
-      margin-bottom: 20px;
+      margin-bottom: 16px;
     }
 
-    .input {
+    .info {
+      margin-bottom: 16px;
+      font-size: 16px;
+    }
+
+    .btn {
       width: 100%;
       padding: 12px;
       font-size: 16px;
-      margin-bottom: 16px;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-      box-sizing: border-box;
-    }
-
-    .calendar {
-      display: grid;
-      grid-template-columns: repeat(7, 1fr);
-      gap: 4px;
-      margin-bottom: 16px;
-    }
-
-    .calendar button {
-      padding: 12px 0;
       border: none;
-      background: #eee;
       border-radius: 6px;
-      font-size: 14px;
-    }
-
-    .calendar button.selected {
-      background: #007bff;
-      color: white;
-    }
-
-    .calendar .sun {
-      color: red;
-    }
-
-    .calendar .sat {
-      color: blue;
-    }
-
-    .weekday {
-      font-weight: bold;
+      margin-top: 8px;
     }
 
     .submit-btn {
-      width: 100%;
-      padding: 12px;
       background: #007bff;
       color: white;
-      border: none;
-      border-radius: 6px;
-      font-size: 16px;
     }
 
-    .month-label {
-      margin-bottom: 8px;
-      font-size: 16px;
+    .back-btn {
+      background: #ccc;
+      color: black;
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>希望休申請</h1>
-    <input id="employeeId" class="input" type="text" placeholder="社員番号を入力" />
-    <div class="month-label" id="monthLabel"></div>
-    <div class="calendar" id="calendar"></div>
-    <button class="submit-btn" onclick="goToConfirm()">確認</button>
+    <h1>申請内容の確認</h1>
+    <div class="info" id="infoText">読み込み中...</div>
+    <button class="btn submit-btn" onclick="submit()">提出</button>
+    <button class="btn back-btn" onclick="history.back()">戻る</button>
   </div>
 
   <script>
-    const calendarEl = document.getElementById("calendar")
-    const monthLabel = document.getElementById("monthLabel")
-    const now = new Date()
-    const year = now.getFullYear()
-    const month = now.getMonth() // 0-indexed
-    const selectedDays = new Set()
+    const params = new URLSearchParams(location.search)
+    const id = params.get("id") || ""
+    const days = params.get("days") || ""
 
-    const firstDay = new Date(year, month, 1)
-    const lastDay = new Date(year, month + 1, 0)
-    const firstWeekday = firstDay.getDay()
+    document.getElementById("infoText").textContent = `社員番号: ${id}　希望日: ${days}`
 
-    monthLabel.textContent = `${year}年${month + 1}月`
-
-    // 曜日ラベル
-    const weekdays = ["日", "月", "火", "水", "木", "金", "土"]
-    weekdays.forEach((day, i) => {
-      const w = document.createElement("div")
-      w.className = "weekday"
-      if (i === 0) w.classList.add("sun")
-      if (i === 6) w.classList.add("sat")
-      w.textContent = day
-      calendarEl.appendChild(w)
-    })
-
-    // 空白
-    for (let i = 0; i < firstWeekday; i++) {
-      const empty = document.createElement("div")
-      calendarEl.appendChild(empty)
-    }
-
-    // 日付ボタン
-    for (let d = 1; d <= lastDay.getDate(); d++) {
-      const date = new Date(year, month, d)
-      const btn = document.createElement("button")
-      btn.textContent = d
-      const weekday = date.getDay()
-      if (weekday === 0) btn.classList.add("sun")
-      if (weekday === 6) btn.classList.add("sat")
-
-      btn.addEventListener("click", () => {
-        const dayStr = d.toString()
-        if (selectedDays.has(dayStr)) {
-          selectedDays.delete(dayStr)
-          btn.classList.remove("selected")
-        } else {
-          selectedDays.add(dayStr)
-          btn.classList.add("selected")
-        }
+    function submit() {
+      fetch("https://script.google.com/macros/s/AKfycbx1kZWE3VpkmCib-0aM1JjqseFSsU7XMUjubmoT4Q0398XklA8mPX-552nM_JmI2gEHEA/exec", {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, days })
+      }).then(() => {
+        alert("申請を送信しました！")
+        location.href = "index.html"
+      }).catch((err) => {
+        alert("送信失敗：" + err)
       })
-
-      calendarEl.appendChild(btn)
-    }
-
-    function goToConfirm() {
-      const id = document.getElementById("employeeId").value.trim()
-      if (!id) {
-        alert("社員番号を入力してください")
-        return
-      }
-      const days = Array.from(selectedDays).join(",")
-      if (!days) {
-        alert("希望日を選択してください")
-        return
-      }
-      location.href = `confirm.html?id=${encodeURIComponent(id)}&days=${encodeURIComponent(days)}`
     }
   </script>
 </body>
