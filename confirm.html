@@ -3,36 +3,77 @@
 <head>
   <meta charset="UTF-8">
   <title>PickMyOff - 確認</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       font-family: sans-serif;
+      margin: 0;
       padding: 20px;
+      background-color: #f9f9f9;
     }
-    button {
+
+    .container {
+      max-width: 480px;
+      margin: auto;
+      background: white;
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    h2 {
+      font-size: 20px;
+      margin-bottom: 15px;
+    }
+
+    p {
       font-size: 16px;
-      margin-top: 20px;
+      margin: 10px 0;
+      word-break: break-word;
+    }
+
+    button {
+      display: block;
+      width: 100%;
+      padding: 12px;
+      font-size: 16px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #0056b3;
     }
   </style>
 </head>
 <body>
-  <h2>申請内容の確認</h2>
-  <p id="summary"></p>
-  <button onclick="submitRequest()">提出</button>
+  <div class="container">
+    <h2>申請内容の確認</h2>
+    <p id="summary"></p>
+    <button onclick="submitRequest()">提出</button>
+  </div>
 
   <script>
     const params = new URLSearchParams(location.search)
     const id = params.get("id")
-    const days = params.get("days").split(",")
+    const days = params.get("days")?.split(",") || []
 
     document.getElementById("summary").textContent = `社員番号: ${id}\n希望日: ${days.join(", ")}`
 
     function submitRequest() {
       fetch("https://pickmyoff-proxy.hosomi-biz.workers.dev/", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({
-    employeeId: id,
-    days: days
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          employeeId: id,
+          days: days
         })
       })
       .then(res => res.text())
