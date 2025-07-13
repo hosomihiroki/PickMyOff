@@ -59,6 +59,12 @@
       background-color: transparent;
       pointer-events: none;
     }
+    .sunday {
+      color: red;
+    }
+    .saturday {
+      color: blue;
+    }
     button {
       margin-top: 16px;
       padding: 12px;
@@ -121,7 +127,13 @@
       const div = document.createElement("div")
       div.className = "day"
       div.textContent = d
+
+      const weekday = new Date(year, month, d).getDay()
+      if (weekday === 0) div.classList.add("sunday")
+      if (weekday === 6) div.classList.add("saturday")
+
       if (selected.has(d)) div.classList.add("selected")
+
       div.onclick = () => {
         if (selected.has(d)) {
           selected.delete(d)
@@ -131,6 +143,7 @@
           div.classList.add("selected")
         }
       }
+
       cal.appendChild(div)
     }
 
