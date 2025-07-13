@@ -1,124 +1,169 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>申請確認</title>
   <style>
     body {
-      font-family: sans-serif;
-      background-color: #f5f5f5;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
       margin: 0;
+      padding: 0;
+      background-color: #f2f2f2;
+      font-family: sans-serif;
     }
-    .container {
-      background: white;
-      padding: 2rem;
-      border-radius: 1rem;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-      width: 300px;
-    }
-    .calendar {
-      display: grid;
-      grid-template-columns: repeat(7, 1fr);
-      gap: 0.5rem;
-      margin-top: 1rem;
-    }
-    .day {
+    .card {
+      max-width: 350px;
+      margin: 40px auto;
+      background-color: #fff;
+      border-radius: 20px;
+      padding: 20px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
       text-align: center;
-      padding: 0.5rem;
-      border-radius: 0.5rem;
     }
-    .selected {
-      background: #007bff;
-      color: white;
+    .title {
+      font-weight: bold;
+      font-size: 20px;
+      margin-bottom: 10px;
     }
-    .sunday { color: red; }
-    .saturday { color: blue; }
-    button {
+    .info {
+      font-size: 14px;
+      margin-bottom: 10px;
+    }
+    .calendar table {
       width: 100%;
-      padding: 0.5rem;
-      margin-top: 1rem;
-      border: none;
-      border-radius: 0.5rem;
+      border-spacing: 5px;
+    }
+    .calendar th, .calendar td {
+      width: 14%;
+      height: 40px;
+      border-radius: 6px;
+      font-size: 14px;
       font-weight: bold;
     }
-    #submitBtn { background: #28a745; color: white; }
-    #backBtn { background: #ccc; }
+    .calendar th {
+      background-color: #eee;
+    }
+    .calendar td.selected {
+      background-color: #007bff;
+      color: #fff;
+    }
+    .calendar td {
+      background-color: #eee;
+    }
+    .calendar td.sunday { color: red; }
+    .calendar td.saturday { color: blue; }
+    .button {
+      width: 100%;
+      padding: 12px;
+      font-size: 16px;
+      font-weight: bold;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      margin-top: 10px;
+    }
+    .submit { background-color: #28a745; }
+    .back { background-color: #ccc; color: black; }
+    .loader {
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #28a745;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      animation: spin 1s linear infinite;
+      display: inline-block;
+      margin-top: 10px;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h2>申請確認</h2>
-    <div id="info"></div>
-    <div id="calendarHeader"></div>
-    <div class="calendar" id="calendar"></div>
-    <button id="submitBtn">提出</button>
-    <button id="backBtn">戻る</button>
+  <div class="card">
+    <div class="title">申請確認</div>
+    <div class="info" id="empInfo"></div>
+    <div class="calendar">
+      <div id="monthYear"></div>
+      <table id="calendar"></table>
+    </div>
+    <button class="button submit" id="submit">提出</button>
+    <button class="button back" onclick="history.back()">戻る</button>
+    <div id="loading" style="display:none"><div class="loader"></div></div>
   </div>
-
   <script>
-    const urlParams = new URLSearchParams(location.search);
-    const id = urlParams.get("id");
-    const name = urlParams.get("name");
-    const year = urlParams.get("year");
-    const month = urlParams.get("month");
-    const days = urlParams.get("days")?.split(',') || [];
+    const params = new URLSearchParams(location.search)
+    const empId = params.get("id")
+    const days = params.getAll("days")
 
-    document.getElementById("info").innerText = `社員番号: ${id}  ${name}`;
-    document.getElementById("calendarHeader").innerText = `${year}年${month}月`;
+    document.getElementById("submit").addEventListener("click", async () => {
+      const btn = document.getElementById("submit")
+      const loader = document.getElementById("loading")
+      btn.disabled = true
+      loader.style.display = "block"
 
-    const calendar = document.getElementById("calendar");
-    const date = new Date(year, month - 1, 1);
-    const startDay = date.getDay();
-    const lastDay = new Date(year, month, 0).getDate();
+      const res = await fetch("https://script.google.com/macros/s/AKfycbwlcXydzeTiMFv-0DUTFcSoQc6lz-sVendyi6jz72Ez142/exec", {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: empId, days })
+      })
 
-    const weekdays = ["日", "月", "火", "水", "木", "金", "土"];
-    weekdays.forEach((w, i) => {
-      const cell = document.createElement("div");
-      cell.textContent = w;
-      cell.className = `day ${i === 0 ? 'sunday' : i === 6 ? 'saturday' : ''}`;
-      calendar.appendChild(cell);
-    });
+      alert("申請が完了しました！")
+      location.href = "index.html"
+    })
 
-    for (let i = 0; i < startDay; i++) {
-      calendar.appendChild(document.createElement("div"));
+    async function init() {
+      const name = await fetch(`https://pickmyoff-proxy.hosomi-biz.workers.dev/get-name?id=${empId}`).then(r => r.text()).catch(() => "取得失敗")
+      const today = new Date()
+      const year = today.getFullYear()
+      const month = today.getMonth() + 1
+      document.getElementById("empInfo").textContent = `社員番号: ${empId} ${name}\n${year}年${month}月`
+      document.getElementById("monthYear").textContent = `${year}年${month}月`
+      renderCalendar(year, month)
     }
 
-    for (let d = 1; d <= lastDay; d++) {
-      const cell = document.createElement("div");
-      cell.textContent = d;
-      cell.className = "day";
-      if (days.includes(d.toString())) cell.classList.add("selected");
-      calendar.appendChild(cell);
-    }
+    function renderCalendar(year, month) {
+      const table = document.getElementById("calendar")
+      table.innerHTML = ""
 
-    document.getElementById("submitBtn").addEventListener("click", async () => {
-      document.getElementById("submitBtn").disabled = true;
-      document.getElementById("submitBtn").innerText = "送信中...";
-      try {
-        const res = await fetch("https://pickmyoff-proxy.hosomi-biz.workers.dev", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ id, name, year, month, days })
-        });
-        const result = await res.text();
-        alert("送信完了: " + result);
-        window.location.href = "index.html";
-      } catch (err) {
-        alert("送信失敗: " + err);
+      const weekdays = ["日", "月", "火", "水", "木", "金", "土"]
+      const head = document.createElement("tr")
+      weekdays.forEach(d => {
+        const th = document.createElement("th")
+        th.textContent = d
+        head.appendChild(th)
+      })
+      table.appendChild(head)
+
+      const firstDay = new Date(year, month - 1, 1).getDay()
+      const totalDays = new Date(year, month, 0).getDate()
+      let day = 1
+
+      for (let i = 0; i < 6; i++) {
+        const row = document.createElement("tr")
+        for (let j = 0; j < 7; j++) {
+          const td = document.createElement("td")
+          if (i === 0 && j < firstDay || day > totalDays) {
+            td.textContent = ""
+          } else {
+            td.textContent = day
+            if (j === 0) td.classList.add("sunday")
+            if (j === 6) td.classList.add("saturday")
+            if (days.includes(`${month}/${day}`)) td.classList.add("selected")
+            day++
+          }
+          row.appendChild(td)
+        }
+        table.appendChild(row)
+        if (day > totalDays) break
       }
-      document.getElementById("submitBtn").disabled = false;
-      document.getElementById("submitBtn").innerText = "提出";
-    });
+    }
 
-    document.getElementById("backBtn").addEventListener("click", () => {
-      const query = new URLSearchParams({ id, name, year, month, days: days.join(",") });
-      window.location.href = `index.html?${query}`;
-    });
+    init()
   </script>
 </body>
 </html>
