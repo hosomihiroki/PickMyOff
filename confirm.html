@@ -5,67 +5,62 @@
   <title>PickMyOff - 確認</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    * {
-      box-sizing: border-box;
-    }
-
     body {
       font-family: sans-serif;
+      background-color: #f8f8f8;
       margin: 0;
-      padding: 20px;
-      background-color: #f9f9f9;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
     }
-
-    .container {
-      max-width: 480px;
-      margin: auto;
+    .card {
       background: white;
-      border-radius: 10px;
       padding: 20px;
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      width: 90%;
+      max-width: 400px;
+      box-sizing: border-box;
+      text-align: center;
     }
-
-    h2 {
-      font-size: 20px;
-      margin-bottom: 15px;
+    .card h2 {
+      margin-top: 0;
     }
-
-    p {
-      font-size: 16px;
-      margin: 10px 0;
-      word-break: break-word;
-    }
-
-    button {
-      display: block;
+    .button {
       width: 100%;
-      padding: 12px;
       font-size: 16px;
-      background-color: #007bff;
-      color: white;
+      padding: 12px;
+      margin-top: 15px;
       border: none;
-      border-radius: 8px;
+      border-radius: 6px;
+      color: white;
       cursor: pointer;
     }
-
-    button:hover {
-      background-color: #0056b3;
+    .submit-button {
+      background-color: #007bff;
+    }
+    .back-button {
+      background-color: #6c757d;
     }
   </style>
 </head>
 <body>
-  <div class="container">
+  <div class="card">
     <h2>申請内容の確認</h2>
     <p id="summary"></p>
-    <button onclick="submitRequest()">提出</button>
+
+    <button class="button submit-button" onclick="submitRequest()">提出する</button>
+    <button class="button back-button" onclick="goBack()">修正する</button>
   </div>
 
   <script>
     const params = new URLSearchParams(location.search)
-    const id = params.get("id")
-    const days = params.get("days")?.split(",") || []
+    const id = params.get("id") || "不明"
+    const days = params.get("days") ? params.get("days").split(",") : []
 
-    document.getElementById("summary").textContent = `社員番号: ${id}\n希望日: ${days.join(", ")}`
+    document.getElementById("summary").textContent = `社員番号: ${id} 希望日: ${days.join(", ")}`
 
     function submitRequest() {
       fetch("https://pickmyoff-proxy.hosomi-biz.workers.dev/", {
@@ -84,6 +79,10 @@
       .catch(err => {
         alert("送信失敗: " + err)
       })
+    }
+
+    function goBack() {
+      location.href = `index.html?id=${id}&days=${days.join(",")}`
     }
   </script>
 </body>
