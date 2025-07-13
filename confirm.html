@@ -1,155 +1,150 @@
+<!-- PickMyOff index.html (UI維持 + 仕様追加: 社員番号→名前反映) -->
 <!DOCTYPE html>
 <html lang="ja">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>申請確認</title>
+  <title>希望休申請</title>
   <style>
     body {
       font-family: sans-serif;
-      margin: 0;
-      background: #f5f5f5;
+      background: #f4f4f4;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
     }
-    .container {
-      max-width: 360px;
-      margin: 40px auto;
-      background: white;
+    .card {
+      background: #fff;
       padding: 24px;
       border-radius: 12px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
       text-align: center;
+      width: 320px;
     }
-    h2 {
+    input {
+      padding: 10px;
+      width: 100%;
       margin-bottom: 12px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
     }
     .calendar {
       display: grid;
       grid-template-columns: repeat(7, 1fr);
-      gap: 6px;
-      margin-bottom: 20px;
-    }
-    .day-header {
-      font-weight: bold;
-      color: #444;
-    }
-    .day-header:nth-child(1) {
-      color: red;
-    }
-    .day-header:nth-child(7) {
-      color: blue;
+      gap: 4px;
     }
     .day {
-      padding: 10px 0;
+      padding: 8px;
       background: #eee;
-      border-radius: 6px;
+      border-radius: 4px;
+      cursor: pointer;
     }
     .day.selected {
       background: #007bff;
       color: white;
-      font-weight: bold;
     }
-    .day.sunday {
-      color: red;
-    }
-    .day.saturday {
-      color: blue;
-    }
+    .sunday { color: red; }
+    .saturday { color: blue; }
     button {
-      width: 100%;
       padding: 12px;
-      font-size: 16px;
-      margin-top: 8px;
+      width: 100%;
+      margin-top: 12px;
       border: none;
-      border-radius: 8px;
-      cursor: pointer;
-    }
-    .submit-btn {
-      background: #28a745;
+      border-radius: 6px;
       color: white;
-    }
-    .back-btn {
-      background: #ccc;
-      color: black;
+      background: #007bff;
+      font-weight: bold;
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h2>申請確認</h2>
-    <div id="employee"></div>
+  <div class="card">
+    <h2>希望休申請</h2>
+    <input type="text" id="empId" placeholder="社員番号を入力" onblur="fetchName()" />
+    <div id="empName"></div>
+    <div id="month"></div>
     <div class="calendar" id="calendar"></div>
-    <button class="submit-btn" id="submitBtn">提出</button>
-    <button class="back-btn" onclick="history.back()">戻る</button>
+    <button onclick="submitForm()">確認</button>
   </div>
 
   <script>
-    // --- URLパラメータから取得 ---
-    const params = new URLSearchParams(location.search);
-    const id = params.get("id");
-    const daysParam = params.get("days");
-    const selectedDays = daysParam ? daysParam.split(",").map(n => parseInt(n)) : [];
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = today.getMonth();
+    const selectedDays = new Set();
 
-    // --- 表示年月を取得（今月で固定）---
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = now.getMonth(); // 0-indexed
+    document.getElementById("month").textContent = `${year}年${month + 1}月`;
 
-    // --- HTMLに社員番号を表示 ---
-    document.getElementById("employee").innerText = `社員番号: ${id}`;
+    function renderCalendar() {
+      const calendar = document.getElementById("calendar");
+      calendar.innerHTML = "";
 
-    // --- カレンダー生成 ---
-    const calendar = document.getElementById("calendar");
+      const startDay = new Date(year, month, 1).getDay();
+      const totalDays = new Date(year, month + 1, 0).getDate();
 
-    const headers = ["日", "月", "火", "水", "木", "金", "土"];
-    headers.forEach(d => {
-      const div = document.createElement("div");
-      div.className = "day-header";
-      div.innerText = d;
-      calendar.appendChild(div);
-    });
+      // 曜日ヘッダー
+      ["日", "月", "火", "水", "木", "金", "土"].forEach((day, i) => {
+        const div = document.createElement("div");
+        div.textContent = day;
+        if (i === 0) div.classList.add("sunday");
+        if (i === 6) div.classList.add("saturday");
+        calendar.appendChild(div);
+      });
 
-    const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
-    const startWeekday = firstDay.getDay();
-    const totalDays = lastDay.getDate();
-
-    for (let i = 0; i < startWeekday; i++) {
-      const empty = document.createElement("div");
-      calendar.appendChild(empty);
-    }
-
-    for (let d = 1; d <= totalDays; d++) {
-      const date = new Date(year, month, d);
-      const div = document.createElement("div");
-      div.className = "day";
-      const weekday = date.getDay();
-      if (weekday === 0) div.classList.add("sunday");
-      if (weekday === 6) div.classList.add("saturday");
-      if (selectedDays.includes(d)) div.classList.add("selected");
-      div.innerText = d;
-      calendar.appendChild(div);
-    }
-
-    // --- 送信処理 ---
-    document.getElementById("submitBtn").addEventListener("click", async () => {
-      const data = {
-        id: id,
-        days: daysParam
-      };
-
-      try {
-        const res = await fetch("https://pickmyoff-proxy.hosomi-biz.workers.dev", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(data)
-        });
-
-        const result = await res.text();
-        alert("送信完了: " + result);
-      } catch (err) {
-        alert("送信失敗: " + err);
+      for (let i = 0; i < startDay; i++) {
+        calendar.appendChild(document.createElement("div"));
       }
-    });
+
+      for (let i = 1; i <= totalDays; i++) {
+        const div = document.createElement("div");
+        div.textContent = i;
+        div.className = "day";
+
+        const dayOfWeek = new Date(year, month, i).getDay();
+        if (dayOfWeek === 0) div.classList.add("sunday");
+        if (dayOfWeek === 6) div.classList.add("saturday");
+
+        div.onclick = () => {
+          if (selectedDays.has(i)) {
+            selectedDays.delete(i);
+            div.classList.remove("selected");
+          } else {
+            selectedDays.add(i);
+            div.classList.add("selected");
+          }
+        };
+        calendar.appendChild(div);
+      }
+    }
+
+    async function fetchName() {
+      const empId = document.getElementById("empId").value.trim();
+      if (!empId) return;
+
+      // 社員名取得（Cloudflare Worker 経由で GAS 呼び出し）
+      const url = `https://pickmyoff-proxy.hosomi-biz.workers.dev/get-name?id=${empId}`;
+      try {
+        const res = await fetch(url);
+        const name = await res.text();
+        document.getElementById("empName").textContent = name || "該当なし";
+      } catch (e) {
+        document.getElementById("empName").textContent = "取得失敗";
+      }
+    }
+
+    function submitForm() {
+      const empId = document.getElementById("empId").value.trim();
+      const days = Array.from(selectedDays).sort((a, b) => a - b);
+      if (!empId || days.length === 0) {
+        alert("社員番号と希望日を入力してください");
+        return;
+      }
+      const params = new URLSearchParams({ id: empId, days: days.join(",") });
+      window.location.href = `confirm.html?${params.toString()}`;
+    }
+
+    renderCalendar();
   </script>
 </body>
 </html>
