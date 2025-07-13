@@ -37,10 +37,20 @@
       font-weight: bold;
       background-color: #eee;
     }
+    .day {
+      background-color: #eee;
+      color: #333;
+    }
     .selected {
       background-color: #007bff;
       color: white;
       font-weight: bold;
+    }
+    .sunday {
+      color: red;
+    }
+    .saturday {
+      color: blue;
     }
     button {
       margin-top: 16px;
@@ -76,7 +86,7 @@
 
     const today = new Date()
     const year = today.getFullYear()
-    const month = today.getMonth() // 0〜11
+    const month = today.getMonth()
     const lastDate = new Date(year, month + 1, 0).getDate()
     const startWeekday = new Date(year, month, 1).getDay()
 
@@ -85,25 +95,31 @@
     const cal = document.getElementById("calendar")
 
     const weekdays = ["日", "月", "火", "水", "木", "金", "土"]
-    for (let i = 0; i < 7; i++) {
+    weekdays.forEach(d => {
       const w = document.createElement("div")
       w.className = "weekday"
-      w.textContent = weekdays[i]
+      w.textContent = d
       cal.appendChild(w)
-    }
+    })
 
     for (let i = 0; i < startWeekday; i++) {
-      const empty = document.createElement("div")
-      cal.appendChild(empty)
+      const blank = document.createElement("div")
+      cal.appendChild(blank)
     }
 
     for (let d = 1; d <= lastDate; d++) {
       const cell = document.createElement("div")
       cell.className = "day"
       cell.textContent = d
+
+      const weekday = new Date(year, month, d).getDay()
+      if (weekday === 0) cell.classList.add("sunday")
+      if (weekday === 6) cell.classList.add("saturday")
+
       if (days.includes(d)) {
         cell.classList.add("selected")
       }
+
       cal.appendChild(cell)
     }
 
