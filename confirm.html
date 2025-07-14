@@ -32,9 +32,6 @@
       line-height: 1.6;
       white-space: pre-wrap;
     }
-    .calendar {
-      text-align: center;
-    }
     .calendar table {
       width: 100%;
       border-spacing: 5px;
@@ -87,12 +84,11 @@
     <button class="button" id="submitBtn">提出</button>
     <button class="button back-button" onclick="history.back()">戻る</button>
   </div>
+
   <script>
     const params = new URLSearchParams(location.search)
     const id = params.get("id")
     const name = params.get("name")
-    const year = params.get("year")
-    const month = params.get("month")
     const days = params.getAll("days")
 
     const info = document.getElementById("info")
@@ -100,13 +96,14 @@
     const weekdays = ["日", "月", "火", "水", "木", "金", "土"]
     const submitBtn = document.getElementById("submitBtn")
 
-    info.textContent = `社員番号: ${id}\n氏名: ${name}\n申請月: ${year}年${month}月\n希望日: ${days.join(", ")}`
+    info.textContent = `社員番号: ${id}\n氏名: ${name}\n希望日: ${days.join(", ")}`
 
     function renderCalendar() {
-      const y = Number(year)
-      const m = Number(month) - 1
-      const firstDay = new Date(y, m, 1)
-      const lastDay = new Date(y, m + 1, 0)
+      const today = new Date()
+      const year = today.getFullYear()
+      const month = today.getMonth() + 1
+      const firstDay = new Date(year, month - 1, 1)
+      const lastDay = new Date(year, month, 0)
       const start = firstDay.getDay()
       const total = lastDay.getDate()
 
@@ -140,7 +137,8 @@
 
     submitBtn.addEventListener("click", async () => {
       submitBtn.disabled = true
-      const payload = { id, name, year, month, days }
+      const payload = { id, name, days }
+
       try {
         const res = await fetch("https://pickmyoff-proxy.hosomi-biz.workers.dev/", {
           method: "POST",
