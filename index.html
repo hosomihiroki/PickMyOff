@@ -9,14 +9,11 @@
       margin: 0;
       padding: 0;
       background-color: #f2f2f2;
-      font-family: sans-serif;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     }
     .card {
-      width: 360px;
+      max-width: 360px;
+      margin: 40px auto;
       background-color: #fff;
       border-radius: 20px;
       padding: 20px;
@@ -26,14 +23,14 @@
       text-align: center;
       font-weight: bold;
       font-size: 20px;
-      margin-bottom: 10px;
+      margin-bottom: 15px;
     }
     input[type="text"] {
       width: 100%;
       padding: 10px;
       font-size: 16px;
       border: 1px solid #ccc;
-      border-radius: 8px;
+      border-radius: 10px;
       margin-bottom: 10px;
     }
     .name-display {
@@ -49,17 +46,15 @@
       width: 100%;
       border-spacing: 5px;
     }
-    .calendar th {
-      background-color: #dfefff;
-      font-weight: bold;
-      padding: 5px 0;
-    }
-    .calendar td {
+    .calendar th, .calendar td {
       width: 14%;
       height: 40px;
       border-radius: 6px;
       font-size: 14px;
       font-weight: bold;
+    }
+    .calendar th {
+      background-color: #d9ecff;
     }
     .calendar td.selectable {
       background-color: #eee;
@@ -125,7 +120,7 @@
 <body>
   <div class="card">
     <div class="title">希望休申請</div>
-    <input type="text" id="empId" placeholder="社員番号" autocomplete="off" />
+    <input type="text" id="empId" placeholder="社員番号" />
     <div class="name-display" id="empName">&nbsp;</div>
     <div class="calendar">
       <div class="month-nav">
@@ -152,29 +147,33 @@
 
     let selectedDays = []
     let currentDate = new Date()
+    let lastFetchedId = ""
+    let debounceTimer = null
 
-    empIdInput.addEventListener("input", updateEmpName)
+    empIdInput.addEventListener("input", () => {
+      clearTimeout(debounceTimer)
+      debounceTimer = setTimeout(updateEmpName, 500)
+    })
+
     submitBtn.addEventListener("click", submitData)
-    prevMonthBtn.addEventListener(() => {
+    prevMonthBtn.addEventListener("click", () => {
       currentDate.setMonth(currentDate.getMonth() - 1)
       renderCalendar()
     })
-    nextMonthBtn.addEventListener(() => {
+    nextMonthBtn.addEventListener("click", () => {
       currentDate.setMonth(currentDate.getMonth() + 1)
       renderCalendar()
     })
 
-    async function updateEmpName() {
+    function updateEmpName() {
       const id = empIdInput.value.trim()
-      if (!id) return empNameEl.textContent = ""
-      try {
-        const res = await fetch(`https://pickmyoff-proxy.hosomi-biz.workers.dev/get-name?id=${id}`)
-        if (!res.ok) throw new Error()
-        const name = await res.text()
-        empNameEl.textContent = name
-      } catch {
-        empNameEl.textContent = "名前取得失敗"
-      }
+      if (!id || id === lastFetchedId) return
+      lastFetchedId = id
+
+      fetch(`https://pickmyoff-proxy.hosomi-biz.workers.dev/get-name?id=${id}`)
+        .then(res => res.ok ? res.text() : Promise.reject("取得失敗"))
+        .then(name => empNameEl.textContent = name)
+        .catch(() => empNameEl.textContent = "名前取得失敗")
     }
 
     function renderCalendar() {
@@ -190,11 +189,9 @@
 
       const daysRow = document.createElement("tr")
       const weekdays = ["日", "月", "火", "水", "木", "金", "土"]
-      weekdays.forEach((day, idx) => {
+      weekdays.forEach(day => {
         const th = document.createElement("th")
         th.textContent = day
-        if (idx === 0) th.style.color = "red"
-        if (idx === 6) th.style.color = "blue"
         daysRow.appendChild(th)
       })
       calendarEl.appendChild(daysRow)
