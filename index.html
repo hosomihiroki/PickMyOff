@@ -10,10 +10,13 @@
       padding: 0;
       background-color: #f2f2f2;
       font-family: sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
     }
     .card {
-      max-width: 350px;
-      margin: 40px auto;
+      width: 360px;
       background-color: #fff;
       border-radius: 20px;
       padding: 20px;
@@ -46,15 +49,17 @@
       width: 100%;
       border-spacing: 5px;
     }
-    .calendar th, .calendar td {
+    .calendar th {
+      background-color: #dfefff;
+      font-weight: bold;
+      padding: 5px 0;
+    }
+    .calendar td {
       width: 14%;
       height: 40px;
       border-radius: 6px;
       font-size: 14px;
       font-weight: bold;
-    }
-    .calendar th {
-      background-color: #eee;
     }
     .calendar td.selectable {
       background-color: #eee;
@@ -120,7 +125,7 @@
 <body>
   <div class="card">
     <div class="title">希望休申請</div>
-    <input type="text" id="empId" placeholder="社員番号" />
+    <input type="text" id="empId" placeholder="社員番号" autocomplete="off" />
     <div class="name-display" id="empName">&nbsp;</div>
     <div class="calendar">
       <div class="month-nav">
@@ -150,23 +155,26 @@
 
     empIdInput.addEventListener("input", updateEmpName)
     submitBtn.addEventListener("click", submitData)
-    prevMonthBtn.addEventListener("click", () => {
+    prevMonthBtn.addEventListener(() => {
       currentDate.setMonth(currentDate.getMonth() - 1)
       renderCalendar()
     })
-    nextMonthBtn.addEventListener("click", () => {
+    nextMonthBtn.addEventListener(() => {
       currentDate.setMonth(currentDate.getMonth() + 1)
       renderCalendar()
     })
 
-    function updateEmpName() {
+    async function updateEmpName() {
       const id = empIdInput.value.trim()
       if (!id) return empNameEl.textContent = ""
-
-      fetch(`https://pickmyoff-proxy.hosomi-biz.workers.dev/get-name?id=${id}`)
-        .then(res => res.ok ? res.text() : Promise.reject("取得失敗"))
-        .then(name => empNameEl.textContent = name)
-        .catch(() => empNameEl.textContent = "名前取得失敗")
+      try {
+        const res = await fetch(`https://pickmyoff-proxy.hosomi-biz.workers.dev/get-name?id=${id}`)
+        if (!res.ok) throw new Error()
+        const name = await res.text()
+        empNameEl.textContent = name
+      } catch {
+        empNameEl.textContent = "名前取得失敗"
+      }
     }
 
     function renderCalendar() {
@@ -182,9 +190,11 @@
 
       const daysRow = document.createElement("tr")
       const weekdays = ["日", "月", "火", "水", "木", "金", "土"]
-      weekdays.forEach(day => {
+      weekdays.forEach((day, idx) => {
         const th = document.createElement("th")
         th.textContent = day
+        if (idx === 0) th.style.color = "red"
+        if (idx === 6) th.style.color = "blue"
         daysRow.appendChild(th)
       })
       calendarEl.appendChild(daysRow)
