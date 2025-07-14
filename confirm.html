@@ -18,16 +18,21 @@
       border-radius: 20px;
       padding: 20px;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-      text-align: center;
     }
     .title {
+      text-align: center;
       font-weight: bold;
       font-size: 20px;
       margin-bottom: 10px;
     }
     .info {
+      text-align: center;
       font-size: 14px;
-      margin-bottom: 10px;
+      margin-bottom: 15px;
+      line-height: 1.6;
+    }
+    .calendar {
+      text-align: center;
     }
     .calendar table {
       width: 100%;
@@ -41,22 +46,18 @@
       font-weight: bold;
     }
     .calendar th {
-      background-color: #eee;
+      background-color: #e0e7ff;
     }
     .calendar td.selected {
       background-color: #007bff;
       color: #fff;
     }
-    .calendar td {
-      background-color: #eee;
-    }
-    .calendar td.sunday { color: red; }
-    .calendar td.saturday { color: blue; }
     .button {
       width: 100%;
       padding: 12px;
       font-size: 16px;
       font-weight: bold;
+      background-color: #28a745;
       color: white;
       border: none;
       border-radius: 10px;
@@ -64,106 +65,92 @@
       transition: background-color 0.3s ease;
       margin-top: 10px;
     }
-    .submit { background-color: #28a745; }
-    .back { background-color: #ccc; color: black; }
-    .loader {
-      border: 4px solid #f3f3f3;
-      border-top: 4px solid #28a745;
-      border-radius: 50%;
-      width: 24px;
-      height: 24px;
-      animation: spin 1s linear infinite;
-      display: inline-block;
-      margin-top: 10px;
+    .button:disabled {
+      background-color: #aaa;
+      cursor: not-allowed;
     }
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
+    .back-button {
+      background-color: #ccc;
+      margin-top: 10px;
     }
   </style>
 </head>
 <body>
   <div class="card">
     <div class="title">申請確認</div>
-    <div class="info" id="empInfo"></div>
+    <div class="info" id="info"></div>
     <div class="calendar">
-      <div id="monthYear"></div>
       <table id="calendar"></table>
     </div>
-    <button class="button submit" id="submit">提出</button>
-    <button class="button back" onclick="history.back()">戻る</button>
-    <div id="loading" style="display:none"><div class="loader"></div></div>
+    <button class="button" id="submitBtn">提出</button>
+    <button class="button back-button" onclick="history.back()">戻る</button>
   </div>
   <script>
     const params = new URLSearchParams(location.search)
-    const empId = params.get("id")
+    const id = params.get("id")
+    const name = params.get("name")
+    const year = params.get("year")
+    const month = params.get("month")
     const days = params.getAll("days")
 
-    document.getElementById("submit").addEventListener("click", async () => {
-      const btn = document.getElementById("submit")
-      const loader = document.getElementById("loading")
-      btn.disabled = true
-      loader.style.display = "block"
+    document.getElementById("info").textContent = `社員番号: ${id}\n${name} ${year}年${month}月`
 
-      const res = await fetch("https://script.google.com/macros/s/AKfycbwlcXydzeTiMFv-0DUTFcSoQc6lz-sVendyi6jz72Ez142/exec", {
-        method: "POST",
-        mode: "no-cors",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: empId, days })
-      })
+    const calendarEl = document.getElementById("calendar")
+    const weekdays = ["日", "月", "火", "水", "木", "金", "土"]
 
-      alert("申請が完了しました！")
-      location.href = "index.html"
-    })
+    function renderCalendar() {
+      const yearNum = Number(year)
+      const monthNum = Number(month) - 1
+      const firstDay = new Date(yearNum, monthNum, 1)
+      const lastDay = new Date(yearNum, monthNum + 1, 0)
+      const startDay = firstDay.getDay()
+      const totalDays = lastDay.getDate()
 
-    async function init() {
-      const name = await fetch(`https://pickmyoff-proxy.hosomi-biz.workers.dev/get-name?id=${empId}`).then(r => r.text()).catch(() => "取得失敗")
-      const today = new Date()
-      const year = today.getFullYear()
-      const month = today.getMonth() + 1
-      document.getElementById("empInfo").textContent = `社員番号: ${empId} ${name}\n${year}年${month}月`
-      document.getElementById("monthYear").textContent = `${year}年${month}月`
-      renderCalendar(year, month)
-    }
-
-    function renderCalendar(year, month) {
-      const table = document.getElementById("calendar")
-      table.innerHTML = ""
-
-      const weekdays = ["日", "月", "火", "水", "木", "金", "土"]
-      const head = document.createElement("tr")
-      weekdays.forEach(d => {
+      const daysRow = document.createElement("tr")
+      weekdays.forEach(day => {
         const th = document.createElement("th")
-        th.textContent = d
-        head.appendChild(th)
+        th.textContent = day
+        daysRow.appendChild(th)
       })
-      table.appendChild(head)
+      calendarEl.appendChild(daysRow)
 
-      const firstDay = new Date(year, month - 1, 1).getDay()
-      const totalDays = new Date(year, month, 0).getDate()
-      let day = 1
-
-      for (let i = 0; i < 6; i++) {
-        const row = document.createElement("tr")
-        for (let j = 0; j < 7; j++) {
+      let date = 1
+      for (let row = 0; row < 6; row++) {
+        const tr = document.createElement("tr")
+        for (let col = 0; col < 7; col++) {
           const td = document.createElement("td")
-          if (i === 0 && j < firstDay || day > totalDays) {
+          if (row === 0 && col < startDay || date > totalDays) {
             td.textContent = ""
           } else {
-            td.textContent = day
-            if (j === 0) td.classList.add("sunday")
-            if (j === 6) td.classList.add("saturday")
-            if (days.includes(`${month}/${day}`)) td.classList.add("selected")
-            day++
+            td.textContent = date
+            const dateStr = `${month}/${date}`
+            if (days.includes(dateStr)) td.classList.add("selected")
+            date++
           }
-          row.appendChild(td)
+          tr.appendChild(td)
         }
-        table.appendChild(row)
-        if (day > totalDays) break
+        calendarEl.appendChild(tr)
+        if (date > totalDays) break
       }
     }
 
-    init()
+    document.getElementById("submitBtn").addEventListener("click", async () => {
+      const payload = { id, name, year, month, days }
+      try {
+        const res = await fetch("https://script.google.com/macros/s/AKfycbwlcXydzTMFv-0DUTFcSoQc6lz-sVendyi6jz7TtCy9mxToiKnWxvHRFvGZonChzUAN/exec", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        })
+        if (!res.ok) throw new Error("申請失敗")
+        alert("申請が完了しました！")
+        location.href = "index.html"
+      } catch (err) {
+        alert("申請中にエラーが発生しました")
+      }
+    })
+
+    renderCalendar()
   </script>
 </body>
 </html>
