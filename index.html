@@ -126,10 +126,6 @@
     <!-- 🔽 社員番号入力フォームのすぐ下に追加 -->
 <div class="name-display" id="empName">&nbsp;</div>
 
-<!-- ✅ 追加：社員名確認用テキスト -->
-<div style="text-align: center; font-size: 14px; margin-bottom: 10px; color: #555;">
-  表示されている社員名を確認してください
-  
 </div>
     <div class="calendar">
       <div class="month-nav">
@@ -141,7 +137,10 @@
     </div>
     <label for="note" style="display:block; font-weight:bold; margin-top:10px;">備考（自由記入）</label>
 <textarea id="note" rows="3" placeholder="メモや伝達事項など" style="width:100%; padding:10px; font-size:14px; border:1px solid #ccc; border-radius:10px; box-sizing:border-box;"></textarea>
-    <button class="button" id="submitBtn">確認</button>
+  <!-- ✅ 追加：社員名確認用テキスト -->
+<div style="text-align: center; font-size: 14px; margin-bottom: 10px; color: #555;">
+  表示されている社員名を確認してください  
+  <button class="button" id="submitBtn">確認</button>
     <div id="loading" style="display:none;text-align:center;margin-top:10px;">
       <span class="loader"></span>
     </div>
