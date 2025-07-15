@@ -139,6 +139,34 @@
     </div>
   </div>
   <script>
+// 🟦 スワイプ操作対応ここから
+let touchStartX = null
+
+document.addEventListener("touchstart", e => {
+  touchStartX = e.touches[0].clientX
+})
+
+document.addEventListener("touchend", e => {
+  if (touchStartX === null) return
+
+  const touchEndX = e.changedTouches[0].clientX
+  const deltaX = touchEndX - touchStartX
+
+  // スワイプ距離が一定以上（例: 50px）なら判定
+  if (Math.abs(deltaX) > 50) {
+    if (deltaX < 0) {
+      // 左スワイプ → 翌月
+      nextMonthBtn.click()
+    } else {
+      // 右スワイプ → 前月
+      prevMonthBtn.click()
+    }
+  }
+
+  touchStartX = null
+})
+// 🟦 スワイプ操作対応ここまで
+    
     const empIdInput = document.getElementById("empId")
     const empNameEl = document.getElementById("empName")
     const calendarEl = document.getElementById("calendar")
