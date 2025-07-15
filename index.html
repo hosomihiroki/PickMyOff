@@ -117,6 +117,29 @@
     }
   </style>
 </head>
+  <style>
+  /* 既存のCSSのあとに追記してOK */
+
+  .loader-text::after {
+    content: '';
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    margin-left: 8px;
+    border: 2px solid #007bff;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    vertical-align: middle;
+  }
+
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+</style>
+  </head>
 <body>
   <div class="card">
     <div class="title">希望休申請</div>
@@ -219,12 +242,24 @@ function updateEmpName() {
   if (!id || id === lastFetchedId) return
   lastFetchedId = id
 
+  const loaderEl = document.querySelector("#empName .loader-text")
+  const nameTextEl = document.querySelector("#empName .name-text")
+
+  loaderEl.style.display = "inline-block"
+  nameTextEl.textContent = ""
+
   fetch(`https://pickmyoff-proxy.hosomi-biz.workers.dev/get-name?path=name&id=${encodeURIComponent(id)}`)
     .then(res => res.ok ? res.text() : Promise.reject("取得失敗"))
-    .then(name => empNameEl.textContent = name)
-    .catch(() => empNameEl.textContent = "名前取得失敗")
-}
-    function renderCalendar() {
+    .then(name => {
+      nameTextEl.textContent = name
+    })
+    .catch(() => {
+      nameTextEl.textContent = "名前取得失敗"
+    })
+    .finally(() => {
+      loaderEl.style.display = "none"
+    })
+}    function renderCalendar() {
       const year = currentDate.getFullYear()
       const month = currentDate.getMonth()
       const firstDay = new Date(year, month, 1)
@@ -298,5 +333,6 @@ query.append("note", note)
 
     renderCalendar()
   </script>
+    
 </body>
 </html>
