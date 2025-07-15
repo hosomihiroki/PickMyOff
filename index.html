@@ -122,7 +122,15 @@
     <div class="title">希望休申請</div>
     <label for="empId" style="display:block; font-weight:bold; margin-bottom:5px;">社員番号</label>
 <input type="text" id="empId" placeholder="AN○○○○" style="width: 100%; padding: 10px; font-size: 16px; border: 1px solid #ccc; border-radius: 10px; margin: 10px 0 15px 0; box-sizing: border-box;" />
-    <div class="name-display" id="empName">&nbsp;</div>
+   
+    <!-- 🔽 社員番号入力フォームのすぐ下に追加 -->
+<div class="name-display" id="empName">&nbsp;</div>
+
+<!-- ✅ 追加：社員名確認用テキスト -->
+<div style="text-align: center; font-size: 14px; margin-bottom: 10px; color: #555;">
+  表示されている社員名を確認してください
+  
+</div>
     <div class="calendar">
       <div class="month-nav">
         <button id="prevMonth">◀</button>
@@ -209,17 +217,17 @@ prevMonthBtn.addEventListener("click", () => {
       renderCalendar()
     })
 
-    function updateEmpName() {
-      const id = empIdInput.value.trim()
-      if (!id || id === lastFetchedId) return
-      lastFetchedId = id
+    // 🔧 修正：社員名取得APIのURLに path=name を追加
+function updateEmpName() {
+  const id = empIdInput.value.trim()
+  if (!id || id === lastFetchedId) return
+  lastFetchedId = id
 
-      fetch(`https://pickmyoff-proxy.hosomi-biz.workers.dev/get-name?id=${id}`)
-        .then(res => res.ok ? res.text() : Promise.reject("取得失敗"))
-        .then(name => empNameEl.textContent = name)
-        .catch(() => empNameEl.textContent = "名前取得失敗")
-    }
-
+  fetch(`https://pickmyoff-proxy.hosomi-biz.workers.dev/get-name?path=name&id=${encodeURIComponent(id)}`)
+    .then(res => res.ok ? res.text() : Promise.reject("取得失敗"))
+    .then(name => empNameEl.textContent = name)
+    .catch(() => empNameEl.textContent = "名前取得失敗")
+}
     function renderCalendar() {
       const year = currentDate.getFullYear()
       const month = currentDate.getMonth()
