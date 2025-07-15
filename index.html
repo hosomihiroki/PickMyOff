@@ -353,7 +353,10 @@ nextMonthBtn.addEventListener("click", () => {
     }
 
     renderCalendar()
-    submitBtn.disabled = false
+    window.addEventListener("pageshow", () => {
+  submitBtn.disabled = false
+  loadingEl.style.display = "none"
+})
   </script>
 </body>
 </html>
