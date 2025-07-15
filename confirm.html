@@ -138,7 +138,8 @@
     submitBtn.addEventListener("click", async () => {
       submitBtn.disabled = true
       const payload = { id, name, days }
-
+  console.log("送信内容:", payload)  // ←ここ！
+      
       try {
         const res = await fetch("https://pickmyoff-proxy.hosomi-biz.workers.dev/", {
           method: "POST",
