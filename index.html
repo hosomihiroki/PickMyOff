@@ -177,18 +177,8 @@
       </div>
       <table id="calendar"></table>
     </div>
-    <textarea id="remarks" placeholder="メモや伝達事項など" style="
-  display: block;
-  width: 100%;
-  margin: 0 auto 15px auto;
-  padding: 12px;
-  font-size: 16px;
-  border-radius: 10px;
-  border: 1px solid #ccc;
-  box-sizing: border-box;
-  resize: none;
-  font-family: inherit;
-"></textarea>
+   <textarea id="remarks" placeholder="メモや伝達事項など"
+  style="width:100%;padding:10px;font-size:14px;border-radius:10px;border:1px solid #ccc;margin-bottom:15px;"></textarea>
     <button class="button" id="submitBtn">確認</button>
     <div id="loading" style="display:none;text-align:center;margin-top:10px;">
       <span class="loader"></span>
@@ -355,8 +345,8 @@ nextMonthBtn.addEventListener("click", () => {
       query.append("name", empNameEl.textContent.trim())
       query.append("year", currentDate.getFullYear())
       query.append("month", currentDate.getMonth() + 1)
-      const remarks = document.getElementById("remarks").value.trim()
-      query.append("remarks", remarks || "")
+      const remarks = document.getElementById("remarks").value?.trim() || ""
+      query.append("remarks", remarks)
       selectedDays.forEach(day => query.append("days", day))
 
       location.href = `confirm.html?${query.toString()}`
