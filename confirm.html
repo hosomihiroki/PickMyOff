@@ -87,9 +87,11 @@
 
   <script>
   const params = new URLSearchParams(location.search)
-  const id = params.get("id")
-  const name = params.get("name")
-  const days = params.getAll("days")
+const id = params.get("id")
+const name = params.get("name")
+const year = params.get("year")  // ←これ抜けてた
+const month = params.get("month")  // ←これも抜けてた
+const days = params.getAll("days")
   const info = document.getElementById("info")
   const calendarEl = document.getElementById("calendar")
   const weekdays = ["日", "月", "火", "水", "木", "金", "土"]
