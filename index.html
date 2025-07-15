@@ -65,9 +65,7 @@
         transform: rotate(360deg);
       }
     }
-    .calendar {
-      text-align: center;
-    }
+   
     .calendar table {
       width: 100%;
       border-spacing: 5px;
@@ -183,27 +181,9 @@
       <span class="loader"></span>
     </div>
   </div>
+  
   <script>
-    document.addEventListener("touchend", e => {
-  if (touchStartX === null) return
-  const touchEndX = e.changedTouches[0].clientX
-  const deltaX = touchEndX - touchStartX
-  if (Math.abs(deltaX) > 50) {
-    if (deltaX < 0) {
-      currentDate.setMonth(currentDate.getMonth() + 1)
-      renderCalendar("left")
-    } else {
-      if (
-        currentDate.getFullYear() !== baseDate.getFullYear() ||
-        currentDate.getMonth() !== baseDate.getMonth()
-      ) {
-        currentDate.setMonth(currentDate.getMonth() - 1)
-        renderCalendar("right")
-      }
-    }
-  }
-  touchStartX = null
-})
+
     const empIdInput = document.getElementById("empId")
     const empNameEl = document.getElementById("empName")
     const calendarEl = document.getElementById("calendar")
@@ -219,6 +199,33 @@
     const baseDate = new Date(currentDate)
     let lastFetchedId = ""
     let debounceTimer = null
+    let touchStartX = null
+
+        document.querySelector(".calendar").addEventListener("touchstart", e => {
+      touchStartX = e.touches[0].clientX
+    })
+
+    document.querySelector(".calendar").addEventListener("touchend", e => {
+      if (touchStartX === null) return
+      const touchEndX = e.changedTouches[0].clientX
+      const deltaX = touchEndX - touchStartX
+
+      if (Math.abs(deltaX) > 50) {
+        if (deltaX < 0) {
+          currentDate.setMonth(currentDate.getMonth() + 1)
+          renderCalendar("left")
+        } else {
+          if (
+            currentDate.getFullYear() !== baseDate.getFullYear() ||
+            currentDate.getMonth() !== baseDate.getMonth()
+          ) {
+            currentDate.setMonth(currentDate.getMonth() - 1)
+            renderCalendar("right")
+          }
+        }
+      }
+      touchStartX = null
+    })
 
     empIdInput.addEventListener("input", () => {
       clearTimeout(debounceTimer)
@@ -258,13 +265,18 @@ nextMonthBtn.addEventListener("click", () => {
         })
     }
 
-    function renderCalendar(direction = null) {
+   function renderCalendar(direction = null) {
   if (direction) {
-    const calendarWrapper = calendarEl.parentElement // .calendar 要素
-    calendarWrapper.classList.add(`slide-${direction}`)
-    setTimeout(() => {
-      calendarWrapper.classList.remove(`slide-${direction}`)
-    }, 300)
+    document.querySelector(".calendar").animate(
+          [
+            { transform: `translateX(${direction === "left" ? "100%" : "-100%"})`, opacity: 0 },
+            { transform: "translateX(0)", opacity: 1 }
+          ],
+          {
+            duration: 300,
+            easing: "ease"
+          }
+        )
   }
 
   const year = currentDate.getFullYear()
