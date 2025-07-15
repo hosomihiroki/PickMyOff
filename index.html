@@ -116,6 +116,24 @@
       font-size: 18px;
       cursor: pointer;
     }
+    .calendar {
+  text-align: center;
+  overflow: hidden; /* アニメーション外は見えないように */
+  position: relative;
+}
+
+.calendar table {
+  transition: transform 0.3s ease;
+}
+
+/* アニメーション用のクラス */
+.calendar.slide-left table {
+  transform: translateX(-100%);
+}
+
+.calendar.slide-right table {
+  transform: translateX(100%);
+}
     .button {
       width: 100%;
       padding: 12px;
@@ -157,27 +175,35 @@
       </div>
       <table id="calendar"></table>
     </div>
+    <textarea id="remarks" placeholder="メモや伝達事項など"
+  style="width:100%;padding:10px;font-size:14px;border-radius:10px;border:1px solid #ccc;margin-bottom:15px;">
+</textarea>
     <button class="button" id="submitBtn">確認</button>
     <div id="loading" style="display:none;text-align:center;margin-top:10px;">
       <span class="loader"></span>
     </div>
   </div>
   <script>
-    let touchStartX = null
-    document.addEventListener("touchstart", e => {
-      touchStartX = e.touches[0].clientX
-    })
     document.addEventListener("touchend", e => {
-      if (touchStartX === null) return
-      const touchEndX = e.changedTouches[0].clientX
-      const deltaX = touchEndX - touchStartX
-      if (Math.abs(deltaX) > 50) {
-        if (deltaX < 0) nextMonthBtn.click()
-        else prevMonthBtn.click()
+  if (touchStartX === null) return
+  const touchEndX = e.changedTouches[0].clientX
+  const deltaX = touchEndX - touchStartX
+  if (Math.abs(deltaX) > 50) {
+    if (deltaX < 0) {
+      currentDate.setMonth(currentDate.getMonth() + 1)
+      renderCalendar("left")
+    } else {
+      if (
+        currentDate.getFullYear() !== baseDate.getFullYear() ||
+        currentDate.getMonth() !== baseDate.getMonth()
+      ) {
+        currentDate.setMonth(currentDate.getMonth() - 1)
+        renderCalendar("right")
       }
-      touchStartX = null
-    })
-
+    }
+  }
+  touchStartX = null
+})
     const empIdInput = document.getElementById("empId")
     const empNameEl = document.getElementById("empName")
     const calendarEl = document.getElementById("calendar")
@@ -201,17 +227,18 @@
     submitBtn.addEventListener("click", submitData)
 
     prevMonthBtn.addEventListener("click", () => {
-      if (
-        currentDate.getFullYear() === baseDate.getFullYear() &&
-        currentDate.getMonth() === baseDate.getMonth()
-      ) return
-      currentDate.setMonth(currentDate.getMonth() - 1)
-      renderCalendar()
-    })
-    nextMonthBtn.addEventListener("click", () => {
-      currentDate.setMonth(currentDate.getMonth() + 1)
-      renderCalendar()
-    })
+  if (
+    currentDate.getFullYear() === baseDate.getFullYear() &&
+    currentDate.getMonth() === baseDate.getMonth()
+  ) return
+  currentDate.setMonth(currentDate.getMonth() - 1)
+  renderCalendar("right") // ← 方向追加
+})
+
+nextMonthBtn.addEventListener("click", () => {
+  currentDate.setMonth(currentDate.getMonth() + 1)
+  renderCalendar("left") // ← 方向追加
+})
 
     function updateEmpName() {
       const id = empIdInput.value.trim()
@@ -231,16 +258,24 @@
         })
     }
 
-    function renderCalendar() {
-      const year = currentDate.getFullYear()
-      const month = currentDate.getMonth()
-      const firstDay = new Date(year, month, 1)
-      const lastDay = new Date(year, month + 1, 0)
-      const startDay = firstDay.getDay()
-      const totalDays = lastDay.getDate()
+    function renderCalendar(direction = null) {
+  if (direction) {
+    const calendarWrapper = calendarEl.parentElement // .calendar 要素
+    calendarWrapper.classList.add(`slide-${direction}`)
+    setTimeout(() => {
+      calendarWrapper.classList.remove(`slide-${direction}`)
+    }, 300)
+  }
 
-      monthYearEl.textContent = `${year}年${month + 1}月`
-      calendarEl.innerHTML = ""
+  const year = currentDate.getFullYear()
+  const month = currentDate.getMonth()
+  const firstDay = new Date(year, month, 1)
+  const lastDay = new Date(year, month + 1, 0)
+  const startDay = firstDay.getDay()
+  const totalDays = lastDay.getDate()
+
+  monthYearEl.textContent = `${year}年${month + 1}月`
+  calendarEl.innerHTML = ""
 
       const daysRow = document.createElement("tr")
       const weekdays = ["日", "月", "火", "水", "木", "金", "土"]
