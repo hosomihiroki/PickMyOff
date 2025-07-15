@@ -99,18 +99,8 @@ const days = params.getAll("days")
 
   info.textContent = `社員番号: ${id}\n氏名: ${name}\n希望日: ${days.join(", ")}`
 
-  // 最初の希望日の年月を取得して使う
-  let displayYear, displayMonth
-  if (days.length > 0) {
-    const [y, m] = days[0].split("/").map(Number)
-    displayYear = y
-    displayMonth = m
-  } else {
-    const today = new Date()
-    displayYear = today.getFullYear()
-    displayMonth = today.getMonth() + 1
-  }
-
+  let displayYear = Number(year)
+let displayMonth = Number(month)
   function renderCalendar() {
     const firstDay = new Date(displayYear, displayMonth - 1, 1)
     const lastDay = new Date(displayYear, displayMonth, 0)
