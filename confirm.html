@@ -134,7 +134,7 @@ const days = params.getAll("days")
           td.textContent = ""
         } else {
           td.textContent = date
-          const dstr = `${displayYear}/${displayMonth}/${date}`
+          const dstr = `${Number(month)}/${date}`  // ← ★月を文字列じゃなく数値に変換
           if (days.includes(dstr)) td.classList.add("selected")
           date++
         }
