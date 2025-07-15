@@ -86,77 +86,84 @@
   </div>
 
   <script>
-    const params = new URLSearchParams(location.search)
-    const id = params.get("id")
-    const name = params.get("name")
-    const days = params.getAll("days")
+  const params = new URLSearchParams(location.search)
+  const id = params.get("id")
+  const name = params.get("name")
+  const days = params.getAll("days")
+  const info = document.getElementById("info")
+  const calendarEl = document.getElementById("calendar")
+  const weekdays = ["日", "月", "火", "水", "木", "金", "土"]
+  const submitBtn = document.getElementById("submitBtn")
 
-    const info = document.getElementById("info")
-    const calendarEl = document.getElementById("calendar")
-    const weekdays = ["日", "月", "火", "水", "木", "金", "土"]
-    const submitBtn = document.getElementById("submitBtn")
+  info.textContent = `社員番号: ${id}\n氏名: ${name}\n希望日: ${days.join(", ")}`
 
-    info.textContent = `社員番号: ${id}\n氏名: ${name}\n希望日: ${days.join(", ")}`
+  // 最初の希望日の年月を取得して使う
+  let displayYear, displayMonth
+  if (days.length > 0) {
+    const [y, m] = days[0].split("/").map(Number)
+    displayYear = y
+    displayMonth = m
+  } else {
+    const today = new Date()
+    displayYear = today.getFullYear()
+    displayMonth = today.getMonth() + 1
+  }
 
-    function renderCalendar() {
-      const today = new Date()
-      const year = today.getFullYear()
-      const month = today.getMonth() + 1
-      const firstDay = new Date(year, month - 1, 1)
-      const lastDay = new Date(year, month, 0)
-      const start = firstDay.getDay()
-      const total = lastDay.getDate()
+  function renderCalendar() {
+    const firstDay = new Date(displayYear, displayMonth - 1, 1)
+    const lastDay = new Date(displayYear, displayMonth, 0)
+    const start = firstDay.getDay()
+    const total = lastDay.getDate()
 
-      const header = document.createElement("tr")
-      weekdays.forEach(day => {
-        const th = document.createElement("th")
-        th.textContent = day
-        header.appendChild(th)
-      })
-      calendarEl.appendChild(header)
-
-      let date = 1
-      for (let i = 0; i < 6; i++) {
-        const tr = document.createElement("tr")
-        for (let j = 0; j < 7; j++) {
-          const td = document.createElement("td")
-          if ((i === 0 && j < start) || date > total) {
-            td.textContent = ""
-          } else {
-            td.textContent = date
-            const dstr = `${month}/${date}`
-            if (days.includes(dstr)) td.classList.add("selected")
-            date++
-          }
-          tr.appendChild(td)
-        }
-        calendarEl.appendChild(tr)
-        if (date > total) break
-      }
-    }
-
-    submitBtn.addEventListener("click", async () => {
-      submitBtn.disabled = true
-      const payload = { id, name, days }
-  console.log("送信内容:", payload)  // ←ここ！
-      
-      try {
-        const res = await fetch("https://pickmyoff-proxy.hosomi-biz.workers.dev/", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload)
-        })
-        if (!res.ok) throw new Error("申請失敗")
-        const text = await res.text()
-        alert("申請完了: " + text)
-        location.href = "index.html"
-      } catch (e) {
-        alert("送信失敗: " + e.message)
-        submitBtn.disabled = false
-      }
+    const header = document.createElement("tr")
+    weekdays.forEach(day => {
+      const th = document.createElement("th")
+      th.textContent = day
+      header.appendChild(th)
     })
+    calendarEl.appendChild(header)
 
-    renderCalendar()
-  </script>
+    let date = 1
+    for (let i = 0; i < 6; i++) {
+      const tr = document.createElement("tr")
+      for (let j = 0; j < 7; j++) {
+        const td = document.createElement("td")
+        if ((i === 0 && j < start) || date > total) {
+          td.textContent = ""
+        } else {
+          td.textContent = date
+          const dstr = `${displayYear}/${displayMonth}/${date}`
+          if (days.includes(dstr)) td.classList.add("selected")
+          date++
+        }
+        tr.appendChild(td)
+      }
+      calendarEl.appendChild(tr)
+      if (date > total) break
+    }
+  }
+
+  submitBtn.addEventListener("click", async () => {
+    submitBtn.disabled = true
+    const payload = { id, name, days }
+    console.log("送信内容:", payload)
+    try {
+      const res = await fetch("https://pickmyoff-proxy.hosomi-biz.workers.dev/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      })
+      if (!res.ok) throw new Error("申請失敗")
+      const text = await res.text()
+      alert("申請完了: " + text)
+      location.href = "index.html"
+    } catch (e) {
+      alert("送信失敗: " + e.message)
+      submitBtn.disabled = false
+    }
+  })
+
+  renderCalendar()
+</script>
 </body>
 </html>
