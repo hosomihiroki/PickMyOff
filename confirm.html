@@ -92,7 +92,7 @@
   const year = params.get("year")  // ←これ抜けてた
   const month = params.get("month")  // ←これも抜けてた
   const days = params.getAll("days")
-  const note = params.get("note") // ← ★これ追加！
+  const note = params.get("note") || ""  // ← ★null対策で空欄に！
   const info = document.getElementById("info")
   const calendarEl = document.getElementById("calendar")
   const weekdays = ["日", "月", "火", "水", "木", "金", "土"]
