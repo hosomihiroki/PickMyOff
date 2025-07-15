@@ -131,6 +131,8 @@
       </div>
       <table id="calendar"></table>
     </div>
+    <label for="note" style="display:block; font-weight:bold; margin-top:10px;">備考（自由記入）</label>
+<textarea id="note" rows="3" placeholder="メモや伝達事項など" style="width:100%; padding:10px; font-size:14px; border:1px solid #ccc; border-radius:10px; box-sizing:border-box;"></textarea>
     <button class="button" id="submitBtn">確認</button>
     <div id="loading" style="display:none;text-align:center;margin-top:10px;">
       <span class="loader"></span>
@@ -255,6 +257,8 @@ prevMonthBtn.addEventListener("click", () => {
       query.append("name", empNameEl.textContent.trim())
       query.append("year", currentDate.getFullYear())
       query.append("month", currentDate.getMonth() + 1)
+      const note = document.getElementById("note").value.trim()
+query.append("note", note)
       selectedDays.forEach(day => query.append("days", day))
 
       location.href = `confirm.html?${query.toString()}`
