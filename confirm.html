@@ -162,7 +162,7 @@ submitBtn.addEventListener("click", async () => {
       alert("申請完了しました。")
       location.href = "index.html"
     } else if (text === "duplicate") {
-      alert("すでに申請済みです。")
+      alert("すでに申請済みです。\n修正依頼は管理者に申請してください。")
     } else {
       throw new Error(text)
     }
